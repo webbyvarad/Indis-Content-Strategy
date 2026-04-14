@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+    <title>Indis · Quiet Progress Tracker</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            background: var(--color-background-secondary);
+            font-family: system-ui, -apple-system, 'Inter', 'Segoe UI', Roboto, Helvetica, sans-serif;
+            padding-bottom: 2rem;
+        }
+
+        .wrap {
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 1rem 1.25rem 2rem;
+            font-size: 14px;
+            color: var(--color-text-primary);
+        }
+
+        /* typography */
+        .section-title {
+            font-size: 20px;
+            font-weight: 500;
+            margin: 1.5rem 0 1rem;
+            color: var(--color-text-primary);
+            letter-spacing: -0.2px;
+        }
+
+        .sub-title {
+            font-size: 15px;
+            font-weight: 500;
+            margin: 1.5rem 0 0.75rem;
+            color: var(--color-text-primary);
+            letter-spacing: -0.2px;
+        }
+
+        .card {
+            background: var(--color-background-primary);
+            border: 0.5px solid var(--color-border-tertiary);
+            border-radius: 20px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 12px;
+            transition: all 0.1s ease;
+        }
+
+        /* pills */
+        .pill {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 500;
+            padding: 3px 10px;
+            border-radius: 30px;
+            margin-right: 6px;
+            margin-bottom: 4px;
+        }
+
+        .pill-green {
+            background: #EAF3DE;
+            color: #3B6D11;
+        }
+
+        .pill-amber {
+            background: #FAEEDA;
+            color: #854F0B;
+        }
+
+        .pill-teal {
+            background: #E1F5EE;
+            color: #0F6E56;
+        }
+
+        .pill-purple {
+            background: #EEEDFE;
+            color: #534AB7;
+        }
+
+        .pill-coral {
+            background: #FAECE7;
+            color: #993C1D;
+        }
+
+        .pill-stone {
+            background: #F1EFE7;
+            color: #5C4B3A;
+        }
+
+        /* tabs */
+        .tab-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            border-bottom: 0.5px solid var(--color-border-tertiary);
+            padding-bottom: 10px;
+        }
+
+        .tab {
+            padding: 6px 16px;
+            font-size: 13px;
+            border-radius: 40px;
+            cursor: pointer;
+            border: 0.5px solid var(--color-border-tertiary);
+            background: var(--color-background-secondary);
+            color: var(--color-text-secondary);
+            transition: all 0.2s;
+            font-weight: 450;
+        }
+
+        .tab.active {
+            background: #1D9E75;
+            color: #fff;
+            border-color: #1D9E75;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* progress tracker specific */
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+            gap: 12px;
+        }
+
+        .progress-count {
+            background: var(--color-background-secondary);
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #1D9E75;
+            border: 0.5px solid var(--color-border-tertiary);
+        }
+
+        .reset-btn {
+            background: none;
+            border: 0.5px solid var(--color-border-tertiary);
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .reset-btn:active {
+            background: rgba(0,0,0,0.05);
+        }
+
+        /* task card */
+        .task-card {
+            background: var(--color-background-primary);
+            border: 0.5px solid var(--color-border-tertiary);
+            border-radius: 18px;
+            padding: 14px;
+            margin-bottom: 12px;
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .task-card.completed {
+            opacity: 0.75;
+            background: var(--color-background-secondary);
+            border-left: 3px solid #1D9E75;
+        }
+
+        .task-check {
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .task-check input {
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            accent-color: #1D9E75;
+            margin: 0;
+        }
+
+        .task-content {
+            flex: 1;
+        }
+
+        .task-week {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #1D9E75;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        .task-title {
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--color-text-primary);
+            line-height: 1.35;
+        }
+
+        .task-desc {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            line-height: 1.45;
+        }
+
+        .completed .task-title,
+        .completed .task-desc,
+        .completed .task-week {
+            text-decoration: line-through;
+            text-decoration-thickness: 1px;
+            text-decoration-color: var(--color-text-tertiary);
+        }
+
+        .completed .task-desc {
+            opacity: 0.7;
+        }
+
+        /* dark mode support */
+        :root {
+            --color-text-primary: #1C1C1E;
+            --color-text-secondary: #5E5E64;
+            --color-text-tertiary: #8E8E93;
+            --color-background-primary: #FFFFFF;
+            --color-background-secondary: #F9F9FB;
+            --color-border-tertiary: #E9E9EF;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --color-text-primary: #EDEDF0;
+                --color-text-secondary: #A1A1AB;
+                --color-text-tertiary: #6C6C74;
+                --color-background-primary: #1C1C1E;
+                --color-background-secondary: #121213;
+                --color-border-tertiary: #2C2C2E;
+            }
+        }
+
+        /* small adjustments for mobile */
+        @media (max-width: 550px) {
+            .wrap {
+                padding: 0.75rem 1rem 1.5rem;
+            }
+            .task-card {
+                padding: 12px;
+                gap: 12px;
+            }
+            .task-title {
+                font-size: 14px;
+            }
+        }
+
+        .hook-box, .caption-box {
+            background: var(--color-background-secondary);
+            border-radius: 0 12px 12px 0;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: var(--color-text-secondary);
+            line-height: 1.6;
+            margin-top: 10px;
+        }
+        .hook-box {
+            border-left: 2px solid #BA7517;
+        }
+        .caption-box {
+            border-left: 2px solid #1D9E75;
+        }
+        .strategy-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #1D9E75;
+            margin-top: 6px;
+            flex-shrink: 0;
+        }
+        .strategy-row {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            margin-bottom: 14px;
+        }
+        .pillar-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 1.5rem;
+        }
+        .pillar {
+            background: var(--color-background-secondary);
+            border-radius: 16px;
+            padding: 14px;
+            border: 0.5px solid var(--color-border-tertiary);
+        }
+        .week-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .post-card {
+            background: var(--color-background-primary);
+            border: 0.5px solid var(--color-border-tertiary);
+            border-radius: 18px;
+            padding: 14px;
+        }
+        .week-header {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--color-text-secondary);
+            margin: 1.25rem 0 0.6rem;
+            letter-spacing: 0.02em;
+            border-left: 2px solid #1D9E75;
+            padding-left: 8px;
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="tab-row">
+        <div class="tab active" onclick="showTab('strategy')">Quiet Identity</div>
+        <div class="tab" onclick="showTab('pillars')">Content Pillars</div>
+        <div class="tab" onclick="showTab('calendar')">📅 Calendar</div>
+        <div class="tab" onclick="showTab('hooks')">Hooks & Captions</div>
+        <div class="tab" onclick="showTab('progress')">✅ Progress Tracker</div>
+    </div>
+
+    <!-- STRATEGY SECTION (from the updated quiet identity) -->
+    <div id="strategy" class="section active">
+        <div class="section-title">Indis · the quiet identity strategy</div>
+        <div class="sub-title">Brand heart — one line</div>
+        <div class="card" style="border-left: 3px solid #1D9E75;">
+            <div style="font-size: 18px; font-weight: 500; color: #1D9E75; margin-bottom: 6px;">“Indis is not for people who want to be smelled.<br>It is for people who want to feel something.”</div>
+            <div style="font-size: 13px; margin-top: 8px;">Also: <em>For people who outgrew loud.</em></div>
+        </div>
+        <div class="sub-title">What Indis actually believes</div>
+        <div class="card"><div style="font-weight:500;margin-bottom:8px;color:#0F6E56">Restraint is a form of sophistication.</div><div style="font-size:13px;line-height:1.7">Indis rejects the fragrance-community obsession with longevity, sillage, and “beast mode”. The wearer doesn’t perform for a room — they wear Indis for the quiet confidence of feeling right before walking out the door. The scent is intimate, skin-close, personal.</div></div>
+        <div class="sub-title">Three truths</div>
+        <div class="card" style="border-left:2px solid #1D9E75;border-radius:0 16px 16px 0;"><div class="strategy-row"><div class="strategy-dot"></div><div><strong>No loudness, no performance.</strong> Made for the wearer, not the room.</div></div><div class="strategy-row"><div class="strategy-dot"></div><div><strong>The right amount of time.</strong> A workday, a dinner — then you change. Honest design.</div></div><div class="strategy-row"><div class="strategy-dot"></div><div><strong>India as inheritance, not aesthetic.</strong> Attar traditions, modern restraint.</div></div></div>
+        <div class="sub-title">Platform + cadence</div>
+        <div class="pillar-grid"><div class="pillar"><div class="pillar-name">Instagram Reels</div><div class="pillar-desc">Story-first, feeling-first. You on camera, slow mornings.</div></div><div class="pillar"><div class="pillar-name">Feed & carousels</div><div class="pillar-desc">Minimal aesthetic, quotes, personal essays.</div></div><div class="pillar"><div class="pillar-name">Stories</div><div class="pillar-desc">Polls, intimacy, solo-founder BTS.</div></div><div class="pillar"><div class="pillar-name">YouTube Shorts</div><div class="pillar-desc">Same reels, mood over molecules.</div></div></div>
+    </div>
+
+    <!-- PILLARS SECTION (quiet / anti-loud) -->
+    <div id="pillars" class="section">
+        <div class="section-title">5 content pillars — no fragrance bro language</div>
+        <div class="card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span class="pill pill-teal">Pillar 1</span><span style="font-weight:500">Cityscape Diaries</span></div><div>Personal stories tied to Indian cities — emotional landscapes, not postcards.</div></div>
+        <div class="card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span class="pill pill-amber">Pillar 2</span><span style="font-weight:500">For people who outgrew loud</span></div><div>Manifesto pillar. Rejects hype, celebrates restraint.</div></div>
+        <div class="card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span class="pill pill-purple">Pillar 3</span><span style="font-weight:500">The quiet craft</span></div><div>Behind the scenes without jargon. Why smoothness, why not synthetic sharpness.</div></div>
+        <div class="card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span class="pill pill-green">Pillar 4</span><span style="font-weight:500">Indigenous inheritance</span></div><div>India’s fragrance culture is ancient. Modern, quiet expression.</div></div>
+        <div class="card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span class="pill pill-coral">Pillar 5</span><span style="font-weight:500">Worn for the self</span></div><div>Real customers, real moments — never about compliments received.</div></div>
+    </div>
+
+    <!-- CALENDAR REFERENCE (original 30-post plan, kept as reference) -->
+    <div id="calendar" class="section">
+        <div class="section-title">30-Post Calendar · 15 weeks (reference)</div>
+        <div style="font-size:13px;color:var(--color-text-secondary);margin-bottom:1rem">Post 1 = Cityscape Diaries · Post 2 = Manifesto. Use the Progress Tracker tab to check off each post.</div>
+        <div class="week-header">Week 1 — Introducing the shift</div><div class="week-grid"><div class="post-card"><div class="post-num">Post 01</div><div class="post-title">Madras Breeze: “I don’t wear this to be remembered. I wear it to feel awake.”</div></div><div class="post-card"><div class="post-num">Post 02</div><div class="post-title">Manifesto: “You don’t need to be smelled to be felt.”</div></div></div>
+        <div class="week-header">Week 2 — Intimate geographies</div><div class="week-grid"><div class="post-card"><div class="post-num">Post 03</div><div class="post-title">Pune NightSilk — the feeling of night drives.</div></div><div class="post-card"><div class="post-num">Post 04</div><div class="post-title">Quiet craft: “Why I don’t care about 12-hour perfume.”</div></div></div>
+        <div class="week-header">Week 3 — Delhi, contrast</div><div class="week-grid"><div class="post-card"><div class="post-num">Post 05</div><div class="post-title">Delhi Noir — “Delhi isn’t loud — it’s layered.”</div></div><div class="post-card"><div class="post-num">Post 06</div><div class="post-title">Indigenous: “India had perfumers before the French.”</div></div></div>
+        <div class="week-header">Week 4 — Outlier & community</div><div class="week-grid"><div class="post-card"><div class="post-num">Post 07</div><div class="post-title">Leh Wildsky — “Mountains don’t perform.”</div></div><div class="post-card"><div class="post-num">Post 08</div><div class="post-title">First customer story (no compliments).</div></div></div>
+        <div class="week-header">Week 5 — Campaign deepens</div><div class="week-grid"><div class="post-card"><div class="post-num">Post 09</div><div class="post-title">Madras Breeze revisited — morning ritual.</div></div><div class="post-card"><div class="post-num">Post 10</div><div class="post-title">“The most powerful scent is the one only you notice.”</div></div></div>
+        <div class="week-header">Week 6 — Education without arrogance</div><div class="week-grid"><div class="post-card"><div class="post-num">Post 11</div><div class="post-title">“Perfume as apparel — your scent should fit your day.”</div></div><div class="post-card"><div class="post-num">Post 12</div><div class="post-title">“Sharp perfumes are a design failure.”</div></div></div>
+        <div class="week-header">Week 7 — Community & identity</div><div class="week-grid"><div class="post-card"><div class="post-num">Post 13</div><div class="post-title">“Which Indian city matches your energy today?”</div></div><div class="post-card"><div class="post-num">Post 14</div><div class="post-title">Attar legacy — “The original slow perfume.”</div></div></div>
+        <div class="week-header">Weeks 8–15 (posts 15 to 30)</div><div class="card"><div style="font-size:13px;line-height:1.8"><strong>Posts 15–16:</strong> Behind the bottle — quiet packaging philosophy.<br><strong>Posts 17–18:</strong> Gifting season — “Give a scent that doesn’t scream.”<br><strong>Posts 19–20:</strong> Second customer story + founder reflection.<br><strong>Posts 21–22:</strong> Tease new city + “We rejected 12 versions”.<br><strong>Posts 23–24:</strong> Office scent positioning + silent campaign reel.<br><strong>Posts 25–26:</strong> UGC round-up + silent visual.<br><strong>Posts 27–28:</strong> Pune NightSilk deep-dive.<br><strong>Posts 29–30:</strong> Milestone post: “30 posts in — what I learned”.</div></div>
+    </div>
+
+    <!-- HOOKS & CAPTIONS (unchanged) -->
+    <div id="hooks" class="section">
+        <div class="section-title">Hooks, captions & quiet lines</div>
+        <div class="sub-title">Opening hooks</div>
+        <div class="hook-box">“I don’t wear perfume for the room. I wear it for the feeling before I step out.”</div>
+        <div class="hook-box">“Most perfumes are trying too hard. This one isn’t.”</div>
+        <div class="hook-box">“You’ve been told that loud = good. That’s a lie.”</div>
+        <div class="sub-title">Caption templates</div>
+        <div class="caption-box">Madras Breeze is not a statement. It’s a companion. For the 8am commute, for the desk you return to. #Indis #ForPeopleWhoOutgrewLoud</div>
+        <div class="caption-box">We built Indis for the person who reads in silence, drinks coffee slowly, and chooses things that feel true rather than impressive.</div>
+        <div class="sub-title">Campaign taglines</div>
+        <div class="card"><div style="font-weight:500;color:#1D9E75">“Indis is not for people who want to be smelled. It is for people who want to feel something.”</div><div style="margin-top:8px">“For people who outgrew loud.”<br>“Wear it for yourself. The rest is just air.”</div></div>
+    </div>
+
+    <!-- ✅ PROGRESS TRACKER — interactive checklist with localStorage -->
+    <div id="progress" class="section">
+        <div class="section-title">📋 Your 30-post tracker</div>
+        <div class="progress-header">
+            <div class="progress-count" id="progressCounter">Completed: 0/30</div>
+            <button class="reset-btn" id="resetProgressBtn">Reset all progress</button>
+        </div>
+        <div id="tasksContainer"></div>
+        <div style="margin-top: 16px; font-size: 12px; color: var(--color-text-tertiary); text-align: center; padding: 12px;">✓ Tap any card to tick/untick — progress saves automatically on your phone.</div>
+    </div>
+</div>
+
+<script>
+    // ---------- DEFINE THE 30 POSTS (based on the 15-week plan, exactly matching the content strategy) ----------
+    const postsData = [
+        { week: "Week 1", postNum: "01", title: "Madras Breeze: 'I don’t wear this to be remembered. I wear it to feel awake.'", desc: "On-camera intro: quiet confidence, the stillness of Chennai at 6am. No hype." },
+        { week: "Week 1", postNum: "02", title: "Manifesto: 'You don’t need to be smelled to be felt.'", desc: "15-sec cinematic reel: person getting ready, no dialogue. End frame: Indis — for people who outgrew loud." },
+        { week: "Week 2", postNum: "03", title: "Pune NightSilk — the feeling of night drives", desc: "Talk about midnight air, Koregaon Park, silk texture. No notes, just atmosphere." },
+        { week: "Week 2", postNum: "04", title: "Quiet craft: 'Why I don’t care about 12-hour perfume.'", desc: "On camera: longevity is easy to fake, restraint is hard. Indis lasts your day — then you move on." },
+        { week: "Week 3", postNum: "05", title: "Delhi Noir — 'Delhi isn’t loud — it’s layered.'", desc: "Quiet confidence of wearing Delhi Noir in a city that never stops. You don’t need to shout." },
+        { week: "Week 3", postNum: "06", title: "Indigenous: 'India had perfumers before the French.'", desc: "Carousel: attar vessels, Kannauj distillation. Caption: 'This is continuation, not fusion.'" },
+        { week: "Week 4", postNum: "07", title: "Leh Wildsky — 'Mountains don’t perform. Neither does this.'", desc: "High-altitude silence translated into fragrance. Expansive, cold, introspective." },
+        { week: "Week 4", postNum: "08", title: "First customer story (no compliments)", desc: "Share a real buyer note: 'Nobody said a word, but I felt unstoppable.' That’s the metric." },
+        { week: "Week 5", postNum: "09", title: "Madras Breeze revisited — morning ritual", desc: "Day-in-the-life, minimal voiceover. Scent as second skin. Quiet." },
+        { week: "Week 5", postNum: "10", title: "Campaign: 'The most powerful scent is the one only you notice.'", desc: "Cinematic: reading, walking, tea. Last frame: Indis — for the wearer, not the room." },
+        { week: "Week 6", postNum: "11", title: "Perfume as apparel — 'Your scent should fit your day.'", desc: "Honest philosophy: you change clothes, why shouldn’t your scent change with you?" },
+        { week: "Week 6", postNum: "12", title: "'Sharp perfumes are a design failure.'", desc: "Educational but warm: why some perfumes sting, and why Indis prioritises smoothness." },
+        { week: "Week 7", postNum: "13", title: "'Which Indian city matches your energy today?'", desc: "Interactive: describe each Cityscape as a mood. Engage comments." },
+        { week: "Week 7", postNum: "14", title: "Attar legacy — 'The original slow perfume came from India.'", desc: "Short reel: history of attar, worn close to skin. Indis modernises that philosophy." },
+        { week: "Week 8", postNum: "15", title: "Behind the bottle — quiet packaging philosophy", desc: "Why minimal design, why no loud logos. 'The vessel should be quiet too.'" },
+        { week: "Week 8", postNum: "16", title: "Packaging as ritual: the 'I' mark story", desc: "Show the unboxing experience. Restraint in every detail." },
+        { week: "Week 9", postNum: "17", title: "Gifting season — 'Give a scent that doesn’t scream.'", desc: "For someone who already has enough noise in their life. Cityscape lineup as a thoughtful set." },
+        { week: "Week 9", postNum: "18", title: "Gift guide: The Indis edit", desc: "Curated for the intentional person. No 'best sellers' — just what feels right." },
+        { week: "Week 10", postNum: "19", title: "Second customer story — honest & unpolished", desc: "Real person, real wear. 'I wore Delhi Noir to dinner and felt more myself.'" },
+        { week: "Week 10", postNum: "20", title: "Founder reflection: 'What 100 customers taught me about fragrance'", desc: "Solo-founder essay: compliments are not the goal. Feeling is." },
+        { week: "Week 11", postNum: "21", title: "Tease a new city (slowly) — next chapter", desc: "Mysterious visual, soft copy: 'Somewhere between a coastal morning and a hill station.'" },
+        { week: "Week 11", postNum: "22", title: "'We rejected 12 versions of this before it felt right.'", desc: "The craft of not settling. Builds quiet authority." },
+        { week: "Week 12", postNum: "23", title: "Office fragrance positioning: 'The scent that doesn’t bother anyone — including yourself.'", desc: "Madras Breeze as the ultimate desk-to-dinner quiet companion." },
+        { week: "Week 12", postNum: "24", title: "Silent campaign reel (no dialogue)", desc: "Pure atmosphere: a room, a person, a shift in energy. Last frame: 'Feel it, not just smell it.'" },
+        { week: "Week 13", postNum: "25", title: "UGC round-up: 'Worn for the self' moments", desc: "Repost customer videos/photos that show intimacy, not projection." },
+        { week: "Week 13", postNum: "26", title: "Visual haiku — Indis in the wild", desc: "Still life photography: perfume beside a coffee cup, a book, a window. No text needed." },
+        { week: "Week 14", postNum: "27", title: "Pune NightSilk deep-dive — who is the NightSilk person?", desc: "What are they doing at 11pm? Reading? Driving? Being still? Persona storytelling." },
+        { week: "Week 14", postNum: "28", title: "The texture of NightSilk: 'Smooth as a cotton shirt after midnight.'", desc: "Sensory metaphor, no ingredient list." },
+        { week: "Week 15", postNum: "29", title: "Milestone post: '30 posts in, here’s what I learned about not chasing loud.'", desc: "Founder reflection, honest stats, what worked, what felt true." },
+        { week: "Week 15", postNum: "30", title: "What’s next for Indis — staying quiet, going deeper", desc: "Announce upcoming city or community project. No hype, just invitation." }
+    ];
+
+    // Load saved state from localStorage
+    let completedState = new Array(30).fill(false);
+
+    function loadProgress() {
+        const saved = localStorage.getItem('indis_tracker_v1');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                if (Array.isArray(parsed) && parsed.length === 30) {
+                    completedState = parsed;
+                }
+            } catch(e) {}
+        }
+        renderTasks();
+    }
+
+    function saveProgress() {
+        localStorage.setItem('indis_tracker_v1', JSON.stringify(completedState));
+        updateCounter();
+    }
+
+    function updateCounter() {
+        const completedCount = completedState.filter(v => v === true).length;
+        const counterEl = document.getElementById('progressCounter');
+        if (counterEl) counterEl.innerText = `Completed: ${completedCount}/30`;
+    }
+
+    function toggleTask(index) {
+        completedState[index] = !completedState[index];
+        saveProgress();
+        renderTasks();  // re-render to update class and visual
+    }
+
+    function resetAllProgress() {
+        if (confirm('Reset all progress? This will clear every checkmark.')) {
+            completedState.fill(false);
+            saveProgress();
+            renderTasks();
+        }
+    }
+
+    function renderTasks() {
+        const container = document.getElementById('tasksContainer');
+        if (!container) return;
+        container.innerHTML = '';
+        postsData.forEach((post, idx) => {
+            const isCompleted = completedState[idx];
+            const taskDiv = document.createElement('div');
+            taskDiv.className = `task-card ${isCompleted ? 'completed' : ''}`;
+            // make entire card clickable (toggle)
+            taskDiv.addEventListener('click', (e) => {
+                // prevent double toggling if clicking directly on checkbox
+                if (e.target.type !== 'checkbox') {
+                    toggleTask(idx);
+                }
+            });
+            // inner structure
+            taskDiv.innerHTML = `
+                <div class="task-check">
+                    <input type="checkbox" ${isCompleted ? 'checked' : ''} data-index="${idx}">
+                </div>
+                <div class="task-content">
+                    <div class="task-week">${post.week} · Post ${post.postNum}</div>
+                    <div class="task-title">${escapeHtml(post.title)}</div>
+                    <div class="task-desc">${escapeHtml(post.desc)}</div>
+                </div>
+            `;
+            const checkbox = taskDiv.querySelector('input[type="checkbox"]');
+            if (checkbox) {
+                checkbox.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleTask(idx);
+                });
+            }
+            container.appendChild(taskDiv);
+        });
+        updateCounter();
+    }
+
+    // simple helper to avoid XSS
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+            return c;
+        });
+    }
+
+    // Tab switching logic (preserve original tabs and add progress)
+    function showTab(tabId) {
+        document.querySelectorAll('.section').forEach(section => {
+            section.classList.remove('active');
+        });
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        const activeSection = document.getElementById(tabId);
+        if (activeSection) activeSection.classList.add('active');
+        // find the clicked tab and add active class
+        const tabs = document.querySelectorAll('.tab');
+        for (let i = 0; i < tabs.length; i++) {
+            const onclickAttr = tabs[i].getAttribute('onclick');
+            if (onclickAttr && onclickAttr.includes(tabId)) {
+                tabs[i].classList.add('active');
+                break;
+            }
+        }
+        // fallback for manual click
+        if (!document.querySelector('.tab.active')) {
+            const matchedTab = Array.from(tabs).find(t => t.innerText.includes('Quiet Identity') && tabId === 'strategy');
+            if (matchedTab) matchedTab.classList.add('active');
+        }
+    }
+
+    // expose globally for inline onclick
+    window.showTab = showTab;
+
+    // reset button handler
+    document.addEventListener('DOMContentLoaded', () => {
+        loadProgress();
+        const resetBtn = document.getElementById('resetProgressBtn');
+        if (resetBtn) resetBtn.addEventListener('click', resetAllProgress);
+        // ensure default tab is strategy (active already from html)
+        // but also ensure progress tab is hidden initially
+        const urlHash = window.location.hash;
+        if (urlHash === '#progress') showTab('progress');
+    });
+</script>
+</body>
+</html>
